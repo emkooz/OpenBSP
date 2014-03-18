@@ -1,0 +1,11 @@
+*.bsp
+*.vcxproj
+
+*.exe
+*.dll
+*.lib
+
+*.obj
+*.tlog
+*.pdb
+*.lastbuildstate

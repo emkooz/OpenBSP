@@ -21,17 +21,10 @@ public:
 				LUMP_FACE_MACRO_TEXTURE_INFO, LUMP_DISP_TRIS, LUMP_PHYSCOLLIDESURFACE, LUMP_PROP_BLOB, LUMP_WATEROVERLAYS, LUMP_LIGHTMAPPAGES, LUMP_LEAF_AMBIENT_INDEX_HDR, LUMP_LIGHTMAPPAGEINFOS, LUMP_LEAF_AMBIENT_INDEX, LUMP_LIGHTING_HDR,
 				LUMP_WORLDLIGHTS_HDR, LUMP_LEAF_AMBIENT_LIGHTING_HDR, LUMP_LEAF_AMBIENT_LIGHTING, LUMP_XZIPPAKFILE, LUMP_FACES_HDR, LUMP_MAP_FLAGS, LUMP_OVERLAY_FADES, LUMP_OVERLAY_SYSTEM_LEVELS, LUMP_PHYSLEVEL, LUMP_DISP_MULTIBLEND};
 
-
-	// TODO: need lump_vertices, lump_edges, lump_surfedges, lump_planes, lump_leaffaces, lump_nodes, ~all lump disps
 	// TODO: Major cleanup
-
-	//
-	//
-	// ONLY HALF OF THE TRIANGLES ARE BEING RENDERED???
-	//      -- Maybe has something to do with the way the BSP tree is being traversed?-
-
-	//  go down bsp like regular
-	//
+	///////////////////////////
+	// TODO ASAP: Make naming more consistent, everything is all over the place right now
+	///////////////////////////
 
 	// Contains the info of every lump (offset from beginning of file, length of lump, version (usually 0), and identification (usually 0)
 	struct lumpInfo
@@ -55,9 +48,23 @@ public:
 	struct Vertex
 	{
 		float x, y, z;
+
+		// cleaner usage of verts
+		Vertex pos() 
+		{
+			return Vertex (x, y, z);
+		};
+
+		Vertex (float a, float b, float c)
+		{
+			x = a;
+			y = b;
+			z = c;
+		};
+
+		Vertex (){};
 	};
-	std::vector <Vertex> vertices;
-	std::vector <Vertex> testvert;
+	std::vector <Vertex> vertices; // map verts
 
 	struct Plane
 	{
@@ -65,7 +72,7 @@ public:
 		float distance;
 		int type;
 	};
-	std::vector <Vertex> mapNormals;
+	std::vector <Vertex> mapNormals; // map normals
 
 	struct Node
 	{
@@ -130,9 +137,8 @@ public:
 	std::vector <int> SurfEdges;
 
 	std::vector <Plane> planes;
-		std::vector <Vertex> PlaneVerts;
 
-	std::vector <Vertex> mapVerts; // Final map vertices, used for rendering
+	std::vector <GLuint> indices; // Final index vector
 
 private:
 	std::ifstream map;

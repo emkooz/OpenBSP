@@ -17,6 +17,9 @@ void Engine::openWindow (const char* name)
 
 	glEnable (GL_DEPTH_TEST);
 	glDepthFunc (GL_LESS);
+
+	glEnable (GL_PRIMITIVE_RESTART); // experimental
+	glPrimitiveRestartIndex (999988887777);
 }
 
 GLuint Engine::CreateShader(const char* VertexFP, const char* FragmentFP)

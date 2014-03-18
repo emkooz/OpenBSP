@@ -5,6 +5,8 @@
 // https://developer.valvesoftware.com/wiki/Source_BSP_File_Format
 // https://gist.github.com/aylaylay/9d910fa144b56ca7d0dc
 
+// messsssyyyyyy
+// minor todo: add comments to main
 
 int main()
 {
@@ -27,7 +29,7 @@ int main()
 	glGenBuffers (1, &vbo);
 
 		glBindBuffer (GL_ARRAY_BUFFER, vbo);
-		glBufferData (GL_ARRAY_BUFFER, (sizeof(float) * 3) * map.mapVerts.size(), &map.mapVerts[0], GL_STATIC_DRAW);
+		glBufferData (GL_ARRAY_BUFFER, (sizeof(float) * 3) * map.vertices.size(), &map.vertices[0], GL_STATIC_DRAW);
 
 	GLuint normalVBO;
 	glGenBuffers (1, &normalVBO);
@@ -35,6 +37,12 @@ int main()
 		glBindBuffer (GL_ARRAY_BUFFER, normalVBO);
 		glBufferData (GL_ARRAY_BUFFER, (sizeof (float) * 3) * map.mapNormals.size(), &map.mapNormals[0], GL_STATIC_DRAW);
 		
+	GLuint ebo;
+	glGenBuffers (1, &ebo);
+
+		glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (GLuint) * map.indices.size(), &map.indices[0], GL_STATIC_DRAW);
+
 	GLuint shader = gl.CreateShader ("basic_shader.vert", "basic_shader.frag");
 	glUseProgram (shader);
 
@@ -51,8 +59,6 @@ int main()
 		glVertexAttribPointer (nPosAttrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		
 	glBindBuffer (GL_ARRAY_BUFFER, vbo);
-	
-	
 		
 		GLint view = glGetUniformLocation (shader, "view");
 		glUniformMatrix4fv (view, 1, GL_FALSE, glm::value_ptr (PlayerCamera.GetView()));
@@ -83,15 +89,7 @@ int main()
 		glClearColor (0.8f , 0.8f , 0.8f , 1.0f);
 		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the buffer.
 
-		glDrawArrays (GL_LINES, 0, map.mapVerts.size() * 3);
-		
-		/*glBegin (GL_LINES);
-			for (int x = 0; x < map.mapVerts.size(); x++)
-			{
-				glVertex3f (map.mapVerts[x].x, map.mapVerts[x].y, map.mapVerts[x].z);
-			}
-		glEnd();*/
-		
+		glDrawElements (GL_TRIANGLES, map.indices.size(), GL_UNSIGNED_INT, 0);
 		
 		glfwSwapBuffers (gl.window);
 		glfwPollEvents ();

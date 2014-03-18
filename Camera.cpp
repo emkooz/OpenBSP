@@ -31,10 +31,6 @@ void Camera::Tick (float dt, GLFWwindow* Window)
 				cos (MouseDelta.y) * cos (MouseDelta.x)
 						  );
 						  
-	//if (CDirection.y > MaxAngle)
-	//if (CDirection.y < -MaxAngle)
-	//std::cout << CDirection.z << std::endl;
-						  
 	CRight = glm::vec3 (
 			sin (MouseDelta.x - 3.14f/2.0f),
 			0,

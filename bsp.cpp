@@ -16,6 +16,8 @@ bsp::bsp (const char* fp)
 
 	if (header.version == 0x17)
 		std::cout << "File matches Dota 2 BSP version.\n";
+	else
+		std::cout << "BSP is not Dota 2 BSP.\n";
 
 	std::cout << "Verifying lumps...\n";
 	for (int x = 0; x < 64; x++)
@@ -40,7 +42,7 @@ bsp::bsp (const char* fp)
 	readLump (map, edges, LUMP_EDGES);
 	std::cout << "done.\n";
 
-	std::cout << "Reading surfedge lump..."; // possible culprit of later errors
+	std::cout << "Reading surfedge lump...";
 	readLump (map, SurfEdges, LUMP_SURFEDGES);
 	std::cout << "done.\n";
 
@@ -56,68 +58,21 @@ bsp::bsp (const char* fp)
 	readLump (map, planes, LUMP_PLANES);
 	std::cout << "done.\n";
 
-	/*for (int x = 0; x < nodes.size(); x++)
-	{
-		//std::cout << "Node " << x << " child 1: " << nodes[0].children[0] << "    child 2: " << nodes[0].children[1] << std::endl;
+	map.close();
 
-		if (nodes[x].children[0] < 0 || nodes[x].children[1] < 0)
-			std::cout << "Node " << x << " child 1: " << nodes[x].children[0] << "    child 2: " << nodes[x].children[1] << std::endl;
-	}*/
-
-	Vertex vert1; vert1.x = 0.0f; vert1.y = 0.5f; vert1.z = 0.0f;
-	testvert.push_back (vert1);
-	Vertex vert2; vert2.x = 0.5f; vert2.y = -0.5f; vert2.z = 0.0f;
-	testvert.push_back (vert2);
-	Vertex vert3; vert3.x = -0.5f; vert3.y = -0.5f; vert3.z = 0.0f;
-	testvert.push_back (vert3);
+	mapNormals.resize (vertices.size(), Vertex(0,0,0));
 }
 
 void bsp::LoadMapDetails(glm::vec3 pos)
 {
-	/*
-	// lazy, probably doesn't work correctly either- remove later
-	// loop through every node for a negative (leaf) number, render that leaf
-	for (int x = 0; x < nodes.size(); x++)
-	{
-		if (nodes[x].children[0] < 0)
-			RenderLeaf (std::abs(nodes[x].children[0]) - 1);
-		if (nodes[x].children[1] < 0)
-			RenderLeaf (std::abs(nodes[x].children[1]) - 1);
-	}
-	*/
-	/*bool finished = false;
-	int curNode = 0;
-	while (!finished)
-	{
-		std::cout << curNode;
-		if (nodes[curNode].children[0] < 0)
-			RenderLeaf (std::abs(nodes[curNode].children[0]) - 1);
-		if (nodes[curNode].children[1] < 0)
-			RenderLeaf (std::abs(nodes[curNode].children[1]) - 1);
-		
-
-		if (nodes[curNode].children[0] > 0)
-			curNode = nodes[curNode].children[0];
-		else if (nodes[curNode].children[1] > 0)
-			curNode = nodes[curNode].children[1];
-
-		std::cout << curNode << "aaa";
-
-		if (nodes[curNode].children[0] < 0 && nodes[curNode].children[1] < 0)
-			finished = true;
-
-		std::cout << nodes[curNode].children[0] << std::endl;
-	}*/
-
 	int curLeaf = WalkBSPTree (pos, 0);
 	std::cout << "Current leaf: " << curLeaf;
 
 	ComputeBSP (0, curLeaf, pos);
 }
 
-void bsp::ComputeBSP (int node, int leaf, glm::vec3 pos)
+void bsp::ComputeBSP (int node, int leaf, glm::vec3 pos) // my mind i dont even
 {
-
 	if (node < 0)
 	{
 		if (node == -1)
@@ -167,55 +122,31 @@ void bsp::RenderLeaf (int leaf) // loadleaf()
 
 void bsp::RenderFace (int face) // loadface()
 {
-
+	int hub, firstPoint, newPoint; // key indices for each face
 	// 8 and 9, 20 and 21, 12, and 13, 24 and 25, 38 and 39, 
-	for (int x = 0; x < faces[face].numEdges; x++) // loop through every single edge in a face
+	for (int x = 0; x < faces[face].numEdges; x++) // loop through every single edge in a face, this will end up making a triangle fan
 	{
 		int EdgeIndex = SurfEdges[faces[face].firstEdge + x]; // Edge index
+		EdgeIndex = std::abs (EdgeIndex); // don't want to be accessing using negatives
 
-		/*if (EdgeIndex > 0) // from first to second vertex
-		{
-			Vertex tempVert;
-			tempVert.x = vertices[edges[EdgeIndex].vert[0]].x;
-			tempVert.y = vertices[edges[EdgeIndex].vert[0]].y;
-			tempVert.z = vertices[edges[EdgeIndex].vert[0]].z;
+		if (x == 0)
+			hub = edges[EdgeIndex].vert[0]; // if this is the first run through the first vertex is the "hub" index that all of the triangles in the plane will refer to
 
-			mapVerts.push_back (tempVert);
-			glVertex3f (vertices[edges[EdgeIndex].vert[0]].x, vertices[edges[EdgeIndex].vert[0]].y, vertices[edges[EdgeIndex].vert[0]].z); 
+		firstPoint = edges[EdgeIndex].vert[0]; // the second point after the hub
+		newPoint = edges[EdgeIndex].vert[1]; // last point to create a full triangle
 
-		}
+		/*still trying to fix normals*/
+		mapNormals[hub] = planes[faces[face].planeIndex].normal;
+		mapNormals[firstPoint] = planes[faces[face].planeIndex].normal;
+		mapNormals[newPoint] = planes[faces[face].planeIndex].normal;
 
-		else if (EdgeIndex < 0) // from second to first vertex
-		{
-			EdgeIndex *= -1;
-
-			Vertex tempVert;
-			tempVert.x = vertices[edges[EdgeIndex].vert[1]].x;
-			tempVert.y = vertices[edges[EdgeIndex].vert[1]].y;
-			tempVert.z = vertices[edges[EdgeIndex].vert[1]].z;
-
-			mapVerts.push_back (tempVert);
-			glVertex3f (vertices[edges[EdgeIndex].vert[1]].x, vertices[edges[EdgeIndex].vert[1]].y, vertices[edges[EdgeIndex].vert[1]].z); 
-		}*/
-			EdgeIndex = std::abs (EdgeIndex);
-
-		Vertex tempVert;
-			tempVert.x = vertices[edges[EdgeIndex].vert[0]].x;
-			tempVert.y = vertices[edges[EdgeIndex].vert[0]].y;
-			tempVert.z = vertices[edges[EdgeIndex].vert[0]].z;
-
-			mapVerts.push_back (tempVert);
-
-			tempVert.x = vertices[edges[EdgeIndex].vert[1]].x;
-			tempVert.y = vertices[edges[EdgeIndex].vert[1]].y;
-			tempVert.z = vertices[edges[EdgeIndex].vert[1]].z;
-
-			mapVerts.push_back (tempVert);
-
-		Vertex tempNorm = planes[faces[face].planeIndex].normal; // create normals
-		mapNormals.push_back (tempNorm);
-		mapNormals.push_back (tempNorm);
+		// push back every single index 
+		indices.push_back (hub);
+		indices.push_back (firstPoint);
+		indices.push_back (newPoint);
 	}
+
+	indices.push_back (999988887777); // once we are done rendering our plane we put in our primitive restart index to start a new plane
 }
 
 template <typename T> void bsp::readLump (std::ifstream& map, std::vector<T>& elements, unsigned int index)
@@ -236,7 +167,7 @@ template <typename T> void bsp::readLump (std::ifstream& map, std::vector<T>& el
 }
 
 //http://sourceforge.net/p/hlbsp/code/HEAD/tree/hlbsp.cpp#l897
-// a lot of the code right here is from ^, make own code later
+// a lot of the code right here is from ^, make own code once I get everything solid
 int bsp::WalkBSPTree (glm::vec3 pos, int node)
 {
 	for (int x = 0; x < 2; x++) 
